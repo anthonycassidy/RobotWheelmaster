@@ -45,19 +45,23 @@ class MotorController:
 
     def process_movement(self, left_x, left_y, right_x, right_y):
         try:
+            logging.debug(f"Received joystick inputs - Left: ({left_x}, {left_y}), Right: ({right_x}, {right_y})")
+
             # Convert joystick values to motor speeds and steering angles
             speed = self._calculate_speed(left_y)
             steering = self._calculate_steering(right_x)
 
+            logging.debug(f"Calculated values - Speed: {speed}, Steering angle: {steering}")
+
             # Apply motor speeds
             for motor_name, motor in self.MOTOR_PINS.items():
                 self._set_motor_speed(motor, speed)
-                logging.debug(f"Setting {motor_name} speed to {speed}")
+                logging.debug(f"Motor {motor_name} - Setting speed to {speed}")
 
             # Apply steering angles
             for servo_name, servo_pin in self.SERVO_PINS.items():
                 self._set_steering_angle(servo_pin, steering)
-                logging.debug(f"Setting {servo_name} angle to {steering}")
+                logging.debug(f"Servo {servo_name} - Setting angle to {steering}")
 
         except Exception as e:
             logging.error(f"Error processing movement: {str(e)}")

@@ -33,6 +33,7 @@ def video_feed():
 @socketio.on('move')
 def handle_movement(data):
     try:
+        logging.debug(f"Received movement data: {data}")
         motor_controller.process_movement(
             data['left_x'], data['left_y'],
             data['right_x'], data['right_y']
@@ -45,6 +46,7 @@ def handle_movement(data):
 @socketio.on('emergency_stop')
 def handle_emergency_stop():
     try:
+        logging.debug("Emergency stop triggered via socket event")
         motor_controller.emergency_stop()
         emit('status', {'status': 'stopped'})
     except Exception as e:
