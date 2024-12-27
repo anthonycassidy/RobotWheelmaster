@@ -1,6 +1,8 @@
 import cv2
 import io
 import logging
+import numpy as np
+import time
 from threading import Thread, Lock
 from .mock_camera import MockPiCamera, MockPiRGBArray
 
@@ -22,12 +24,17 @@ class Camera:
         stream = MockPiRGBArray(self.camera)
         while True:
             try:
+                # Capture frame into stream.array
                 self.camera.capture(stream, format='bgr', use_video_port=True)
+
                 with self.lock:
                     # Convert frame to JPEG
                     _, buffer = cv2.imencode('.jpg', stream.array)
                     self.frame = buffer.tobytes()
-                stream.truncate(0)
+
+                # Small delay to prevent high CPU usage
+                time.sleep(1.0 / self.camera.framerate)
+
             except Exception as e:
                 logging.error(f"Camera capture error: {str(e)}")
                 continue

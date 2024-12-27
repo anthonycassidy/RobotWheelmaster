@@ -25,9 +25,9 @@ class MockPiCamera:
         cv2.putText(img, time.strftime("%Y-%m-%d %H:%M:%S"),
                    (50, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
-        # Convert to JPEG bytes
-        _, jpeg = cv2.imencode('.jpg', img)
-        output.write(jpeg.tobytes())
+        # Store the image in the output's array attribute
+        if hasattr(output, 'array'):
+            output.array = img.copy()
 
     def close(self):
         pass
@@ -36,14 +36,9 @@ class MockPiRGBArray:
     def __init__(self, camera):
         self.camera = camera
         self.array = np.zeros((camera.resolution[1], camera.resolution[0], 3), dtype=np.uint8)
-        self.buffer = io.BytesIO()
-
-    def write(self, data):
-        self.buffer.write(data)
 
     def truncate(self, size=0):
-        self.buffer.seek(0)
-        self.buffer.truncate()
+        pass
 
     def __enter__(self):
         return self
