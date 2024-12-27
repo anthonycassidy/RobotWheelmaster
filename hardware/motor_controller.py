@@ -22,6 +22,8 @@ class MotorController:
             'rear_right': 26
         }
 
+        # Initialize pwm_instances before setup
+        self.pwm_instances = {}
         self._setup_gpio()
         logging.info("Motor controller initialized with mock GPIO")
 
@@ -32,28 +34,35 @@ class MotorController:
             GPIO.setup(motor['in1'], GPIO.OUT)
             GPIO.setup(motor['in2'], GPIO.OUT)
             # Initialize PWM for speed control
-            motor['pwm'] = GPIO.PWM(motor['en'], 1000)
-            motor['pwm'].start(0)
+            self.pwm_instances[motor['en']] = GPIO.PWM(motor['en'], 1000)
+            self.pwm_instances[motor['en']].start(0)
 
         # Setup servo pins
         for servo_pin in self.SERVO_PINS.values():
             GPIO.setup(servo_pin, GPIO.OUT)
-            GPIO.PWM(servo_pin, 50).start(7.5)  # Center position
+            self.pwm_instances[servo_pin] = GPIO.PWM(servo_pin, 50)
+            self.pwm_instances[servo_pin].start(7.5)  # Center position
 
     def process_movement(self, left_x, left_y, right_x, right_y):
-        # Convert joystick values to motor speeds and steering angles
-        speed = self._calculate_speed(left_y)
-        steering = self._calculate_steering(right_x)
+        try:
+            # Convert joystick values to motor speeds and steering angles
+            speed = self._calculate_speed(left_y)
+            steering = self._calculate_steering(right_x)
 
-        # Apply motor speeds
-        for motor_name, motor in self.MOTOR_PINS.items():
-            self._set_motor_speed(motor, speed)
-            logging.debug(f"Setting {motor_name} speed to {speed}")
+            # Apply motor speeds
+            for motor_name, motor in self.MOTOR_PINS.items():
+                self._set_motor_speed(motor, speed)
+                logging.debug(f"Setting {motor_name} speed to {speed}")
 
-        # Apply steering angles
-        for servo_name, servo_pin in self.SERVO_PINS.items():
-            self._set_steering_angle(servo_pin, steering)
-            logging.debug(f"Setting {servo_name} angle to {steering}")
+            # Apply steering angles
+            for servo_name, servo_pin in self.SERVO_PINS.items():
+                self._set_steering_angle(servo_pin, steering)
+                logging.debug(f"Setting {servo_name} angle to {steering}")
+
+        except Exception as e:
+            logging.error(f"Error processing movement: {str(e)}")
+            self.emergency_stop()
+            raise
 
     def _calculate_speed(self, y_value):
         # Convert y-axis value to speed (-100 to 100)
@@ -71,23 +80,31 @@ class MotorController:
             GPIO.output(motor['in1'], GPIO.LOW)
             GPIO.output(motor['in2'], GPIO.HIGH)
 
-        motor['pwm'].ChangeDutyCycle(abs(speed))
+        self.pwm_instances[motor['en']].ChangeDutyCycle(abs(speed))
 
     def _set_steering_angle(self, servo_pin, angle):
         # Convert angle to duty cycle (2.5 to 12.5)
         duty = 2.5 + (angle / 18.0)
-        GPIO.PWM(servo_pin, 50).ChangeDutyCycle(duty)
+        self.pwm_instances[servo_pin].ChangeDutyCycle(duty)
 
     def emergency_stop(self):
         logging.info("Emergency stop triggered")
-        for motor in self.MOTOR_PINS.values():
-            motor['pwm'].ChangeDutyCycle(0)
-            GPIO.output(motor['in1'], GPIO.LOW)
-            GPIO.output(motor['in2'], GPIO.LOW)
+        try:
+            for motor in self.MOTOR_PINS.values():
+                self.pwm_instances[motor['en']].ChangeDutyCycle(0)
+                GPIO.output(motor['in1'], GPIO.LOW)
+                GPIO.output(motor['in2'], GPIO.LOW)
 
-        # Center all servos
-        for servo_pin in self.SERVO_PINS.values():
-            GPIO.PWM(servo_pin, 50).ChangeDutyCycle(7.5)
+            # Center all servos
+            for servo_pin in self.SERVO_PINS.values():
+                self.pwm_instances[servo_pin].ChangeDutyCycle(7.5)
+        except Exception as e:
+            logging.error(f"Error during emergency stop: {str(e)}")
 
     def __del__(self):
+        for pwm in self.pwm_instances.values():
+            try:
+                pwm.stop()
+            except:
+                pass
         GPIO.cleanup()
