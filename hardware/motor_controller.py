@@ -1,26 +1,11 @@
 from .mock_gpio import GPIO
+from .pin_config import MOTOR_PINS, SERVO_PINS, PWM_FREQUENCY, MOTOR_PWM_FREQUENCY
 import logging
 
 class MotorController:
     def __init__(self):
         # GPIO Setup
         GPIO.setmode(GPIO.BCM)
-
-        # Motor driver pins
-        self.MOTOR_PINS = {
-            'front_left': {'en': 17, 'in1': 27, 'in2': 22},
-            'front_right': {'en': 23, 'in1': 24, 'in2': 25},
-            'rear_left': {'en': 5, 'in1': 6, 'in2': 13},
-            'rear_right': {'en': 12, 'in1': 16, 'in2': 20}
-        }
-
-        # Servo pins
-        self.SERVO_PINS = {
-            'front_left': 18,
-            'front_right': 19,
-            'rear_left': 21,
-            'rear_right': 26
-        }
 
         # Initialize pwm_instances before setup
         self.pwm_instances = {}
@@ -32,18 +17,18 @@ class MotorController:
 
     def _setup_gpio(self):
         # Setup motor control pins
-        for motor in self.MOTOR_PINS.values():
+        for motor in MOTOR_PINS.values():
             GPIO.setup(motor['en'], GPIO.OUT)
             GPIO.setup(motor['in1'], GPIO.OUT)
             GPIO.setup(motor['in2'], GPIO.OUT)
             # Initialize PWM for speed control
-            self.pwm_instances[motor['en']] = GPIO.PWM(motor['en'], 1000)
+            self.pwm_instances[motor['en']] = GPIO.PWM(motor['en'], MOTOR_PWM_FREQUENCY)
             self.pwm_instances[motor['en']].start(0)
 
         # Setup servo pins
-        for servo_pin in self.SERVO_PINS.values():
+        for servo_pin in SERVO_PINS.values():
             GPIO.setup(servo_pin, GPIO.OUT)
-            self.pwm_instances[servo_pin] = GPIO.PWM(servo_pin, 50)
+            self.pwm_instances[servo_pin] = GPIO.PWM(servo_pin, PWM_FREQUENCY)
             self.pwm_instances[servo_pin].start(7.5)  # Center position
 
     def process_movement(self, left_x, left_y, right_x, right_y):
@@ -59,12 +44,12 @@ class MotorController:
             logging.info(f"Calculated Speed: {speed}% | Steering Angle: {steering}°")
 
             # Apply motor speeds
-            for motor_name, motor in self.MOTOR_PINS.items():
+            for motor_name, motor in MOTOR_PINS.items():
                 self._set_motor_speed(motor, speed)
                 logging.info(f"Motor {motor_name}: Speed set to {speed}%")
 
             # Apply steering angles
-            for servo_name, servo_pin in self.SERVO_PINS.items():
+            for servo_name, servo_pin in SERVO_PINS.items():
                 self._set_steering_angle(servo_pin, steering)
                 logging.info(f"Servo {servo_name}: Angle set to {steering}°")
 
@@ -101,13 +86,13 @@ class MotorController:
     def emergency_stop(self):
         logging.info("Emergency stop triggered")
         try:
-            for motor in self.MOTOR_PINS.values():
+            for motor in MOTOR_PINS.values():
                 self.pwm_instances[motor['en']].ChangeDutyCycle(0)
                 GPIO.output(motor['in1'], GPIO.LOW)
                 GPIO.output(motor['in2'], GPIO.LOW)
 
             # Center all servos
-            for servo_pin in self.SERVO_PINS.values():
+            for servo_pin in SERVO_PINS.values():
                 self.pwm_instances[servo_pin].ChangeDutyCycle(7.5)
         except Exception as e:
             logging.error(f"Error during emergency stop: {str(e)}")
