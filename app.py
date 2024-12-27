@@ -5,6 +5,14 @@ import logging
 from hardware.motor_controller import MotorController
 from hardware.camera import Camera
 
+class SocketIOHandler(logging.Handler):
+    def __init__(self, socketio):
+        super().__init__()
+        self.socketio = socketio
+
+    def emit(self, record):
+        self.socketio.emit('log', {'message': self.format(record)})
+
 # Set up logging with a more visible format
 logging.basicConfig(
     level=logging.DEBUG,
@@ -15,6 +23,12 @@ logging.basicConfig(
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'robotcontrol2024'
 socketio = SocketIO(app)
+
+# Add SocketIO handler to send logs to frontend
+socket_handler = SocketIOHandler(socketio)
+socket_handler.setLevel(logging.INFO)
+socket_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+logging.getLogger().addHandler(socket_handler)
 
 # Initialize hardware controllers
 motor_controller = MotorController()

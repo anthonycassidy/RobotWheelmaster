@@ -12,7 +12,7 @@
 <body>
     <div class="container py-4">
         <h1 class="text-center mb-4">Robot Control Interface</h1>
-        
+
         <div class="video-container mb-4">
             <img id="video-feed" src="{{ url_for('video_feed') }}" alt="Robot Camera Feed">
             <div id="video-status"></div>
@@ -36,6 +36,11 @@
                 <h3>Steering</h3>
                 <div id="right-joystick" class="joystick-container"></div>
             </div>
+        </div>
+
+        <div class="log-container mt-4">
+            <h3>Robot Status Log</h3>
+            <div id="log-display" class="log-display"></div>
         </div>
     </div>
 

@@ -4,22 +4,39 @@ const socket = io();
 // Connection status handling
 socket.on('connect', () => {
     updateStatus('Connected', 'success');
+    addLogEntry('Connected to robot control server');
 });
 
 socket.on('disconnect', () => {
     updateStatus('Disconnected', 'danger');
+    addLogEntry('Disconnected from robot control server');
 });
 
 socket.on('status', (data) => {
     if (data.status === 'error') {
         updateStatus(data.message, 'danger');
+        addLogEntry('Error: ' + data.message);
     }
+});
+
+socket.on('log', (data) => {
+    addLogEntry(data.message);
 });
 
 function updateStatus(message, type) {
     const statusElement = document.getElementById('status');
     statusElement.textContent = message;
     statusElement.className = `alert alert-${type}`;
+}
+
+function addLogEntry(message) {
+    const logDisplay = document.getElementById('log-display');
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    const timestamp = new Date().toLocaleTimeString();
+    entry.textContent = `[${timestamp}] ${message}`;
+    logDisplay.appendChild(entry);
+    logDisplay.scrollTop = logDisplay.scrollHeight;
 }
 
 // Initialize joysticks
@@ -43,6 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
     leftJoystick = nipplejs.create(leftOptions);
     rightJoystick = nipplejs.create(rightOptions);
 
+    addLogEntry('Joystick controls initialized');
+
     let leftData = { x: 0, y: 0 };
     let rightData = { x: 0, y: 0 };
 
@@ -55,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     leftJoystick.on('end', () => {
         leftData = { x: 0, y: 0 };
         sendControlData(leftData, rightData);
+        addLogEntry('Movement stopped');
     });
 
     rightJoystick.on('move', (evt, data) => {
@@ -66,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     rightJoystick.on('end', () => {
         rightData = { x: 0, y: 0 };
         sendControlData(leftData, rightData);
+        addLogEntry('Steering centered');
     });
 
     // Emergency stop button
@@ -73,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         socket.emit('emergency_stop');
         leftData = { x: 0, y: 0 };
         rightData = { x: 0, y: 0 };
+        addLogEntry('EMERGENCY STOP ACTIVATED');
     });
 });
 

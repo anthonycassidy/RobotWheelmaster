@@ -41,3 +41,28 @@
     font-weight: bold;
     margin: 1rem;
 }
+
+.log-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.log-display {
+    height: 200px;
+    overflow-y: auto;
+    background: var(--bs-dark);
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.log-entry {
+    margin-bottom: 0.5rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid var(--bs-secondary);
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
