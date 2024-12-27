@@ -11,4 +11,5 @@ dependencies = [
     "numpy>=2.2.1",
     "opencv-python>=4.10.0.84",
     "psycopg2-binary>=2.9.10",
+    "rpi-gpio>=0.7.1",
 ]
