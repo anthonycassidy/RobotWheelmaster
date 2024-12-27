@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Control Interface</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.1/dist/nipplejs.min.js"></script>
+</head>
+<body>
+    <div class="container py-4">
+        <h1 class="text-center mb-4">Robot Control Interface</h1>
+        
+        <div class="video-container mb-4">
+            <img id="video-feed" src="{{ url_for('video_feed') }}" alt="Robot Camera Feed">
+            <div id="video-status"></div>
+        </div>
+
+        <div id="status" class="alert alert-info text-center">
+            Connecting...
+        </div>
+
+        <div class="control-container">
+            <div class="text-center">
+                <h3>Movement</h3>
+                <div id="left-joystick" class="joystick-container"></div>
+            </div>
+
+            <button id="emergency-stop" class="btn btn-danger">
+                EMERGENCY STOP
+            </button>
+
+            <div class="text-center">
+                <h3>Steering</h3>
+                <div id="right-joystick" class="joystick-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/controller.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/video.js') }}"></script>
+</body>
+</html>
