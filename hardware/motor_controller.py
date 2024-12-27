@@ -25,7 +25,10 @@ class MotorController:
         # Initialize pwm_instances before setup
         self.pwm_instances = {}
         self._setup_gpio()
-        logging.info("Motor controller initialized with mock GPIO")
+        logging.info("=== Motor Controller Initialized ===")
+        logging.info("Motors configured: front_left, front_right, rear_left, rear_right")
+        logging.info("Servos configured: front_left, front_right, rear_left, rear_right")
+        logging.info("================================")
 
     def _setup_gpio(self):
         # Setup motor control pins
@@ -45,23 +48,27 @@ class MotorController:
 
     def process_movement(self, left_x, left_y, right_x, right_y):
         try:
-            logging.debug(f"Received joystick inputs - Left: ({left_x}, {left_y}), Right: ({right_x}, {right_y})")
+            logging.info("=== Movement Command Received ===")
+            logging.info(f"Drive Controls: Forward/Back: {left_y:.2f}, Turn: {left_x:.2f}")
+            logging.info(f"Steering Controls: Left/Right: {right_x:.2f}, Adjust: {right_y:.2f}")
 
             # Convert joystick values to motor speeds and steering angles
             speed = self._calculate_speed(left_y)
             steering = self._calculate_steering(right_x)
 
-            logging.debug(f"Calculated values - Speed: {speed}, Steering angle: {steering}")
+            logging.info(f"Calculated Speed: {speed}% | Steering Angle: {steering}°")
 
             # Apply motor speeds
             for motor_name, motor in self.MOTOR_PINS.items():
                 self._set_motor_speed(motor, speed)
-                logging.debug(f"Motor {motor_name} - Setting speed to {speed}")
+                logging.info(f"Motor {motor_name}: Speed set to {speed}%")
 
             # Apply steering angles
             for servo_name, servo_pin in self.SERVO_PINS.items():
                 self._set_steering_angle(servo_pin, steering)
-                logging.debug(f"Servo {servo_name} - Setting angle to {steering}")
+                logging.info(f"Servo {servo_name}: Angle set to {steering}°")
+
+            logging.info("=== Movement Command Completed ===")
 
         except Exception as e:
             logging.error(f"Error processing movement: {str(e)}")

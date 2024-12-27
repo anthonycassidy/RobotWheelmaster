@@ -5,7 +5,13 @@ import logging
 from hardware.motor_controller import MotorController
 from hardware.camera import Camera
 
-logging.basicConfig(level=logging.DEBUG)
+# Set up logging with a more visible format
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='[%(asctime)s] %(levelname)s: %(message)s',
+    datefmt='%H:%M:%S'
+)
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'robotcontrol2024'
 socketio = SocketIO(app)
@@ -13,6 +19,12 @@ socketio = SocketIO(app)
 # Initialize hardware controllers
 motor_controller = MotorController()
 camera = Camera()
+
+logging.info("=== Robot Control Server Starting ===")
+logging.info("Video feed initialized")
+logging.info("Motor controller initialized")
+logging.info("Socket.IO ready for joystick inputs")
+logging.info("=====================================")
 
 @app.route('/')
 def index():
@@ -33,7 +45,7 @@ def video_feed():
 @socketio.on('move')
 def handle_movement(data):
     try:
-        logging.debug(f"Received movement data: {data}")
+        logging.info(f"Received movement data: {data}")
         motor_controller.process_movement(
             data['left_x'], data['left_y'],
             data['right_x'], data['right_y']
@@ -46,7 +58,7 @@ def handle_movement(data):
 @socketio.on('emergency_stop')
 def handle_emergency_stop():
     try:
-        logging.debug("Emergency stop triggered via socket event")
+        logging.info("Emergency stop triggered via socket event")
         motor_controller.emergency_stop()
         emit('status', {'status': 'stopped'})
     except Exception as e:
